@@ -5,7 +5,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
-import android.widget.ImageView;
+
+import com.lukti.android.mmdb.mobilemoviedatabase.picasso.SquaredImageView;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -15,15 +17,15 @@ import java.util.ArrayList;
 public class ImageAdapter extends BaseAdapter{
 
     private Context mContext;
-    private ArrayList<Integer> mPosterIds;
+    private ArrayList<String> mPosterUrls;
 
-    public ImageAdapter(Context c, ArrayList<Integer> p) {
+    public ImageAdapter(Context c, ArrayList<String> p) {
         mContext = c;
-        mPosterIds = p;
+        mPosterUrls = p;
     }
 
-    public Object getItem(int position) {
-        return null;
+    public String getItem(int position) {
+        return mPosterUrls.get(position);
     }
 
     public long getItemId(int position) {
@@ -31,11 +33,12 @@ public class ImageAdapter extends BaseAdapter{
     }
 
     public int getCount() {
-        return mPosterIds.size();
+        return mPosterUrls.size();
     }
 
     // create a new ImageView for each item referenced by the Adapter
     public View getView(int position, View convertView, ViewGroup parent) {
+        /*
         ImageView imageView;
         if (convertView == null) {
             // if it's not recycled, initialize some attributes
@@ -48,6 +51,19 @@ public class ImageAdapter extends BaseAdapter{
         }
 
         imageView.setImageResource(mPosterIds.get(position));
-        return imageView;
+        */
+        SquaredImageView view = (SquaredImageView) convertView;
+
+        if (view == null) {
+            view = new SquaredImageView(mContext);
+            view.setLayoutParams(new GridView.LayoutParams(400, 400));
+           // view.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            view.setPadding(0, 0, 0, 0);
+        }
+        String url = getItem(position);
+
+        Picasso.with(mContext).load(url).into(view);
+
+        return view;
     }
 }

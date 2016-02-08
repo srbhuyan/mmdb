@@ -5,4 +5,6 @@
     android:columnWidth="90dp"
     android:numColumns="auto_fit"
     android:stretchMode="columnWidth"
-    android:gravity="center" />
+    android:gravity="center"
+    android:verticalSpacing="0dp"
+    android:horizontalSpacing="0dp"/>
