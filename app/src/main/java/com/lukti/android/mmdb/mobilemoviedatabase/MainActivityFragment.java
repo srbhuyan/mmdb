@@ -1,5 +1,6 @@
 package com.lukti.android.mmdb.mobilemoviedatabase;
 
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -77,21 +78,22 @@ public class MainActivityFragment extends Fragment {
         int id = item.getItemId();
         if(id == R.id.action_refresh){
             FetchMovieTask fetchMovieTask = new FetchMovieTask();
-            fetchMovieTask.execute();
+            fetchMovieTask.execute("popularity.desc");
         }
         return super.onOptionsItemSelected(item);
     }
 
-    public class FetchMovieTask extends AsyncTask<Void, Void, Void> {
+    public class FetchMovieTask extends AsyncTask<String, Void, Void> {
 
         private final String LOG_TAG = FetchMovieTask.class.getSimpleName();
+        final String FORECAST_BASE_URL = "https://api.themoviedb.org/3/discover/movie?";
+        final String SORT_PARAM = "sort_by";
+        final String APPID_PARAM = "api_key";
 
-        protected Void doInBackground(Void... params){
+        protected Void doInBackground(String... params){
 
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
-            final String API_KEY = "4991e2dbb6b6110f1e6abc6ddabcb492";
-
 
             // Will contain the raw JSON response as a string.
             String forecastJsonStr = null;
@@ -100,7 +102,15 @@ public class MainActivityFragment extends Fragment {
                 // Construct the URL for the OpenWeatherMap query
                 // Possible parameters are avaiable at OWM's forecast API page, at
                 // http://openweathermap.org/API#forecast
-                URL url = new URL("http://api.themoviedb.org/3/discover/movie?with_genres=18&sort_by=vote_average.desc&vote_count.gte=10&api_key=" + API_KEY);
+                //URL url = new URL("http://api.themoviedb.org/3/discover/movie?with_genres=18&sort_by=vote_average.desc&vote_count.gte=10&api_key=" + API_KEY);
+
+                Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
+                        .appendQueryParameter(SORT_PARAM, params[0])
+                        .appendQueryParameter(APPID_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
+                        .build();
+
+                URL url = new URL(builtUri.toString());
+                Log.v(LOG_TAG, "Built URI " + builtUri.toString());
 
                 // Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
