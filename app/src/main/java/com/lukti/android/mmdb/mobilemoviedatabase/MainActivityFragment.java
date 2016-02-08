@@ -11,10 +11,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.GridView;
 
 import com.lukti.android.mmdb.mobilemoviedatabase.adapter.ImageAdapter;
+import com.lukti.android.mmdb.mobilemoviedatabase.data.Movie;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,9 +34,14 @@ import java.util.Arrays;
  */
 public class MainActivityFragment extends Fragment {
 
-    private ArrayAdapter<String> mMovieAdapter;
+    private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
+
+    private ImageAdapter mImageAdapter;
+    private ArrayList<Movie> mMovies;
+    private ArrayList<String> mPosterUrls;
 
     public MainActivityFragment() {
+        mMovies = new ArrayList<Movie>();
     }
 
     @Override
@@ -65,12 +74,45 @@ public class MainActivityFragment extends Fragment {
                 "http://i.imgur.com/DvpvklR.png",
                 "http://i.imgur.com/DvpvklR.png"
         };
+        mPosterUrls = new ArrayList<String>(Arrays.asList(posterUrls));
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         GridView gridView = (GridView)rootView;
-        gridView.setAdapter(new ImageAdapter(getActivity(), new ArrayList<String>(Arrays.asList(posterUrls))));
+        mImageAdapter = new ImageAdapter(getActivity(), mPosterUrls);
+
+        gridView.setAdapter(mImageAdapter);
 
         return rootView;
+    }
+
+    public void movieDataArrived(){
+        mPosterUrls.clear();
+        ArrayList<String> posterUrls = buildPosterUrls();
+        mPosterUrls.addAll(posterUrls);
+        mPosterUrls.addAll(posterUrls);
+        mImageAdapter.notifyDataSetChanged();
+    }
+
+    private ArrayList<String> buildPosterUrls(){
+
+        final String POSTER_BASE_URL = "http://image.tmdb.org/t/p/";
+        final String POSTER_SIZE = "w185";
+
+        ArrayList<String> posters = new ArrayList<String>();
+
+        for( Movie movie:mMovies ){
+            Uri builtUri = Uri.parse(POSTER_BASE_URL).buildUpon()
+                    .appendPath(POSTER_SIZE)
+                    .appendEncodedPath(movie.getPosterPath())
+                    .build();
+            posters.add(builtUri.toString());
+        }
+
+        for( String poster:posters ) {
+            Log.v(LOG_TAG, "POSTER_URL: " + poster);
+        }
+
+        return posters;
     }
 
     @Override
@@ -83,34 +125,60 @@ public class MainActivityFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
-    public class FetchMovieTask extends AsyncTask<String, Void, Void> {
+    /**
+     * FetchMovieTask AsynchTask to fetch the movie data
+     */
+
+    public class FetchMovieTask extends AsyncTask<String, Void, ArrayList<Movie>> {
 
         private final String LOG_TAG = FetchMovieTask.class.getSimpleName();
-        final String FORECAST_BASE_URL = "https://api.themoviedb.org/3/discover/movie?";
+        final String TMD_BASE_URL = "https://api.themoviedb.org/3/discover/movie?";
         final String SORT_PARAM = "sort_by";
         final String APPID_PARAM = "api_key";
 
-        protected Void doInBackground(String... params){
+        private ArrayList<Movie> getMoviesFromJson(String movieJsonStr) throws JSONException {
+
+            final String TMD_RESULT = "results";
+            final String TMD_POSTER = "poster_path";
+            final String TMD_PLOT = "overview";
+            final String TMD_RELEASE_DATE = "release_date";
+            final String TMD_TITLE = "original_title";
+            final String TMD_RATING = "vote_average";
+            final String TMD_POPULARITY = "popularity";
+
+            JSONObject movieJson = new JSONObject(movieJsonStr);
+            JSONArray movieArray = movieJson.getJSONArray(TMD_RESULT);
+
+            ArrayList<Movie> movies = new ArrayList<Movie>();
+
+            for(int i = 0; i < movieArray.length(); i++) {
+                JSONObject movie = movieArray.getJSONObject(i);
+                movies.add(new Movie(
+                        movie.getString(TMD_TITLE),
+                        movie.getString(TMD_POSTER),
+                        movie.getString(TMD_PLOT),
+                        movie.getString(TMD_RELEASE_DATE),
+                        movie.getDouble(TMD_RATING),
+                        movie.getDouble(TMD_POPULARITY)
+                ));
+            }
+            return movies;
+        }
+
+        protected ArrayList<Movie> doInBackground(String... params){
 
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
-
-            // Will contain the raw JSON response as a string.
-            String forecastJsonStr = null;
+            String movieJsonStr = null;
 
             try {
-                // Construct the URL for the OpenWeatherMap query
-                // Possible parameters are avaiable at OWM's forecast API page, at
-                // http://openweathermap.org/API#forecast
-                //URL url = new URL("http://api.themoviedb.org/3/discover/movie?with_genres=18&sort_by=vote_average.desc&vote_count.gte=10&api_key=" + API_KEY);
-
-                Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
+                Uri builtUri = Uri.parse(TMD_BASE_URL).buildUpon()
                         .appendQueryParameter(SORT_PARAM, params[0])
                         .appendQueryParameter(APPID_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
                         .build();
 
                 URL url = new URL(builtUri.toString());
-                Log.v(LOG_TAG, "Built URI " + builtUri.toString());
+                //Log.v(LOG_TAG, "Built URI " + builtUri.toString());
 
                 // Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
@@ -128,9 +196,6 @@ public class MainActivityFragment extends Fragment {
                 StringBuffer buffer = new StringBuffer();
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
-                    // But it does make debugging a *lot* easier if you print out the completed
-                    // buffer for debugging.
                     buffer.append(line + "\n");
                 }
 
@@ -138,13 +203,12 @@ public class MainActivityFragment extends Fragment {
                     // Stream was empty.  No point in parsing.
                     return null;
                 }
-                forecastJsonStr = buffer.toString();
+                movieJsonStr = buffer.toString();
 
-                Log.v(LOG_TAG, "Forecast JSON String: " + forecastJsonStr);
+                //Log.v(LOG_TAG, "Movie JSON String: " + movieJsonStr);
 
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
-                // If the code didn't successfully get the weather data, there's no point in attemping to parse it.
                 return null;
             } finally{
                 if (urlConnection != null) {
@@ -159,7 +223,23 @@ public class MainActivityFragment extends Fragment {
                 }
             }
 
+            try {
+                return getMoviesFromJson(movieJsonStr);
+            }catch(JSONException e){
+                Log.e(LOG_TAG, e.getMessage(), e);
+                e.printStackTrace();
+            }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<Movie> movies) {
+            super.onPostExecute(movies);
+            if( movies != null ) {
+                mMovies.clear();
+                mMovies.addAll(movies);
+                movieDataArrived();
+            }
         }
     }
 }

@@ -5,8 +5,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.ImageView;
 
-import com.lukti.android.mmdb.mobilemoviedatabase.picasso.SquaredImageView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class ImageAdapter extends BaseAdapter{
 
     // create a new ImageView for each item referenced by the Adapter
     public View getView(int position, View convertView, ViewGroup parent) {
-        /*
+
         ImageView imageView;
         if (convertView == null) {
             // if it's not recycled, initialize some attributes
@@ -50,8 +50,9 @@ public class ImageAdapter extends BaseAdapter{
             imageView = (ImageView) convertView;
         }
 
-        imageView.setImageResource(mPosterIds.get(position));
-        */
+        //imageView.setImageResource(mPosterIds.get(position));
+
+        /*
         SquaredImageView view = (SquaredImageView) convertView;
 
         if (view == null) {
@@ -60,10 +61,11 @@ public class ImageAdapter extends BaseAdapter{
            // view.setScaleType(ImageView.ScaleType.CENTER_CROP);
             view.setPadding(0, 0, 0, 0);
         }
+        */
+
         String url = getItem(position);
+        Picasso.with(mContext).load(url).into(imageView);
 
-        Picasso.with(mContext).load(url).into(view);
-
-        return view;
+        return imageView;
     }
 }
