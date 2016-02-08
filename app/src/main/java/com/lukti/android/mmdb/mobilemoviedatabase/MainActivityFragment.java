@@ -10,6 +10,9 @@ import android.widget.GridView;
 
 import com.lukti.android.mmdb.mobilemoviedatabase.adapter.ImageAdapter;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -24,9 +27,24 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        // references to our images
+        Integer[] posterIds = {
+                R.drawable.sample_2, R.drawable.sample_3,
+                R.drawable.sample_4, R.drawable.sample_5,
+                R.drawable.sample_6, R.drawable.sample_7,
+                R.drawable.sample_0, R.drawable.sample_1,
+                R.drawable.sample_2, R.drawable.sample_3,
+                R.drawable.sample_4, R.drawable.sample_5,
+                R.drawable.sample_6, R.drawable.sample_7,
+                R.drawable.sample_0, R.drawable.sample_1,
+                R.drawable.sample_2, R.drawable.sample_3,
+                R.drawable.sample_4, R.drawable.sample_5,
+                R.drawable.sample_6, R.drawable.sample_7
+        };
+
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         GridView gridView = (GridView)rootView;
-        gridView.setAdapter(new ImageAdapter(getActivity()));
+        gridView.setAdapter(new ImageAdapter(getActivity(), new ArrayList<Integer>(Arrays.asList(posterIds))));
 
         return rootView;
     }

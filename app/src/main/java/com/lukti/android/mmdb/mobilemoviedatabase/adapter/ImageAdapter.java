@@ -7,7 +7,7 @@ import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 
-import com.lukti.android.mmdb.mobilemoviedatabase.R;
+import java.util.ArrayList;
 
 /**
  * Created by Tiklu on 2/7/2016.
@@ -15,24 +15,11 @@ import com.lukti.android.mmdb.mobilemoviedatabase.R;
 public class ImageAdapter extends BaseAdapter{
 
     private Context mContext;
+    private ArrayList<Integer> mPosterIds;
 
-    // references to our images
-    private Integer[] mThumbIds = {
-            R.drawable.sample_2, R.drawable.sample_3,
-            R.drawable.sample_4, R.drawable.sample_5,
-            R.drawable.sample_6, R.drawable.sample_7,
-            R.drawable.sample_0, R.drawable.sample_1,
-            R.drawable.sample_2, R.drawable.sample_3,
-            R.drawable.sample_4, R.drawable.sample_5,
-            R.drawable.sample_6, R.drawable.sample_7,
-            R.drawable.sample_0, R.drawable.sample_1,
-            R.drawable.sample_2, R.drawable.sample_3,
-            R.drawable.sample_4, R.drawable.sample_5,
-            R.drawable.sample_6, R.drawable.sample_7
-    };
-
-    public ImageAdapter(Context c) {
+    public ImageAdapter(Context c, ArrayList<Integer> p) {
         mContext = c;
+        mPosterIds = p;
     }
 
     public Object getItem(int position) {
@@ -44,7 +31,7 @@ public class ImageAdapter extends BaseAdapter{
     }
 
     public int getCount() {
-        return mThumbIds.length;
+        return mPosterIds.size();
     }
 
     // create a new ImageView for each item referenced by the Adapter
@@ -60,7 +47,7 @@ public class ImageAdapter extends BaseAdapter{
             imageView = (ImageView) convertView;
         }
 
-        imageView.setImageResource(mThumbIds[position]);
+        imageView.setImageResource(mPosterIds.get(position));
         return imageView;
     }
 }
