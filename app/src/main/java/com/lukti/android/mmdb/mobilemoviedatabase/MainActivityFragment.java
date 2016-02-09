@@ -2,6 +2,7 @@ package com.lukti.android.mmdb.mobilemoviedatabase;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -37,25 +38,26 @@ public class MainActivityFragment extends Fragment {
     private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
 
     private MovieAdapter mMovieAdapter;
-    private ArrayList<Movie> mMovies;
+    private final int mPortraitNumCols  = 2;
+    private final int mLandscapeNumCols = 4;
 
     public MainActivityFragment() {
-        mMovies = new ArrayList<Movie>();
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        GridView gridView = (GridView)rootView;
-        mMovieAdapter = new MovieAdapter(getActivity(), mMovies);
+        GridView gridView = (GridView)inflater.inflate(R.layout.fragment_main, container, false);
+
+        int orientation = getResources().getConfiguration().orientation;
+        if( orientation == Configuration.ORIENTATION_PORTRAIT ){
+            gridView.setNumColumns(mPortraitNumCols);
+        }else if( orientation == Configuration.ORIENTATION_LANDSCAPE ){
+            gridView.setNumColumns(mLandscapeNumCols);
+        }
+
+        mMovieAdapter = new MovieAdapter(getActivity(), gridView, new ArrayList<Movie>());
 
         gridView.setAdapter(mMovieAdapter);
 
@@ -68,11 +70,7 @@ public class MainActivityFragment extends Fragment {
             }
         });
 
-        return rootView;
-    }
-
-    public void movieDataArrived(){
-        mMovieAdapter.notifyDataSetChanged();
+        return gridView;
     }
 
     private void fetchMovieData(){
@@ -191,9 +189,8 @@ public class MainActivityFragment extends Fragment {
         protected void onPostExecute(ArrayList<Movie> movies) {
             super.onPostExecute(movies);
             if( movies != null ) {
-                mMovies.clear();
-                mMovies.addAll(movies);
-                movieDataArrived();
+                mMovieAdapter.clear();
+                mMovieAdapter.addAll(movies);
             }
         }
     }

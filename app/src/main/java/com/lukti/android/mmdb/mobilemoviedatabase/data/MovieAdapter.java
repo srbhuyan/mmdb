@@ -1,15 +1,15 @@
 package com.lukti.android.mmdb.mobilemoviedatabase.data;
 
 import android.content.Context;
-import android.graphics.Point;
-import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
+import com.lukti.android.mmdb.mobilemoviedatabase.R;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -21,19 +21,22 @@ public class MovieAdapter extends BaseAdapter{
 
     private Context mContext;
     private ArrayList<Movie> mMovies;
-    private int mScreenWidth;
-    private int mScreenHeight;
+    private View mParentView;
 
-    public MovieAdapter(Context c, ArrayList<Movie> p) {
+    public MovieAdapter(Context c, View p, ArrayList<Movie> m ) {
         mContext = c;
-        mMovies = p;
+        mParentView = p;
+        mMovies = m;
+    }
 
-        WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
-        Display display = wm.getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        mScreenWidth = size.x;
-        mScreenHeight = size.y;
+    public void clear(){
+        if(mMovies != null) mMovies.clear();
+        notifyDataSetChanged();
+    }
+
+    public void addAll(ArrayList<Movie> movies){
+        if( mMovies != null) mMovies.addAll(movies);
+        notifyDataSetChanged();
     }
 
     public Movie getItem(int position) {
@@ -48,24 +51,18 @@ public class MovieAdapter extends BaseAdapter{
         return mMovies.size();
     }
 
-    // create a new ImageView for each item referenced by the Adapter
     public View getView(int position, View convertView, ViewGroup parent) {
 
-        ImageView imageView;
         if (convertView == null) {
-            // if it's not recycled, initialize some attributes
-            imageView = new ImageView(mContext);
-            imageView.setLayoutParams(new GridView.LayoutParams(mScreenWidth/2, mScreenHeight/2));
-            //imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            //imageView.setPadding(0, 0, 0, 0);
-        } else {
-            imageView = (ImageView) convertView;
+            convertView = LayoutInflater.from(mContext).inflate(R.layout.poster_view, parent, false);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(mParentView.getWidth() / ((GridView) mParentView).getNumColumns(),
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            convertView.setLayoutParams(layoutParams);
         }
 
         Movie movie = getItem(position);
-        Picasso.with(mContext).load(movie.getPosterPath()).into(imageView);
-        //Picasso.with(mContext).setIndicatorsEnabled(true);
+        Picasso.with(mContext).load(movie.getPosterPath()).into((ImageView) convertView);
 
-        return imageView;
+        return convertView;
     }
 }
