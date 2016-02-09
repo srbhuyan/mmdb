@@ -64,6 +64,7 @@ public class MovieAdapter extends BaseAdapter{
 
         Movie movie = getItem(position);
         Picasso.with(mContext).load(movie.getPosterPath()).into(imageView);
+        //Picasso.with(mContext).setIndicatorsEnabled(true);
 
         return imageView;
     }

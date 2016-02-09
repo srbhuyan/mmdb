@@ -1,9 +1,11 @@
 package com.lukti.android.mmdb.mobilemoviedatabase;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,7 +33,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 /**
- * A placeholder fragment containing a simple view.
+ * MainActivity fragment.
  */
 public class MainActivityFragment extends Fragment {
 
@@ -70,9 +72,7 @@ public class MainActivityFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 Movie movie = mMovieAdapter.getItem(position);
-                //Toast.makeText(getActivity(), movie.getOriginalTitle(), Toast.LENGTH_SHORT).show();
-
-                Intent intent = new Intent(getActivity(), DetailActivity.class).putExtra("MOVIE", movie);
+                Intent intent = new Intent(getActivity(), DetailActivity.class).putExtra(getString(R.string.movie_object_key), movie);
                 startActivity(intent);
             }
         });
@@ -88,29 +88,37 @@ public class MainActivityFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if(id == R.id.action_refresh){
-            FetchMovieTask fetchMovieTask = new FetchMovieTask();
-            fetchMovieTask.execute("popularity.desc");
+            fetchMovieData();
         }
         return super.onOptionsItemSelected(item);
     }
 
+    private void fetchMovieData(){
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String sortPref = prefs.getString(getString(R.string.pref_movie_sort_order_key),
+                getString(R.string.sort_order_value_most_popular));
+
+        new FetchMovieTask().execute(sortPref);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        fetchMovieData();
+    }
+
     /**
-     * FetchMovieTask AsynchTask to fetch the movie data
+     * FetchMovieTask AsyncTask to fetch the movie data
      */
 
     public class FetchMovieTask extends AsyncTask<String, Void, ArrayList<Movie>> {
 
         private final String LOG_TAG = FetchMovieTask.class.getSimpleName();
-        final String TMD_BASE_URL = "https://api.themoviedb.org/3/discover/movie?";
-        final String SORT_PARAM = "sort_by";
-        final String APPID_PARAM = "api_key";
-
-        final String POSTER_BASE_URL = "http://image.tmdb.org/t/p/";
-        final String POSTER_SIZE = "w185";
 
         private String buildFullPosterPath(String partialPath){
-            Uri builtUri = Uri.parse(POSTER_BASE_URL).buildUpon()
-                    .appendPath(POSTER_SIZE)
+            Uri builtUri = Uri.parse(getString(R.string.TMD_POSTER_BASE_URL)).buildUpon()
+                    .appendPath(getString(R.string.TMD_POSTER_SIZE))
                     .appendEncodedPath(partialPath)
                     .build();
             return builtUri.toString();
@@ -118,28 +126,20 @@ public class MainActivityFragment extends Fragment {
 
         private ArrayList<Movie> getMoviesFromJson(String movieJsonStr) throws JSONException {
 
-            final String TMD_RESULT = "results";
-            final String TMD_POSTER = "poster_path";
-            final String TMD_PLOT = "overview";
-            final String TMD_RELEASE_DATE = "release_date";
-            final String TMD_TITLE = "original_title";
-            final String TMD_RATING = "vote_average";
-            final String TMD_POPULARITY = "popularity";
-
             JSONObject movieJson = new JSONObject(movieJsonStr);
-            JSONArray movieArray = movieJson.getJSONArray(TMD_RESULT);
+            JSONArray movieArray = movieJson.getJSONArray(getString(R.string.TMD_RESULT));
 
             ArrayList<Movie> movies = new ArrayList<Movie>();
 
             for(int i = 0; i < movieArray.length(); i++) {
                 JSONObject movie = movieArray.getJSONObject(i);
                 movies.add(new Movie(
-                        movie.getString(TMD_TITLE),
-                        buildFullPosterPath(movie.getString(TMD_POSTER)),
-                        movie.getString(TMD_PLOT),
-                        movie.getString(TMD_RELEASE_DATE),
-                        movie.getDouble(TMD_RATING),
-                        movie.getDouble(TMD_POPULARITY)
+                        movie.getString(getString(R.string.TMD_TITLE)),
+                        buildFullPosterPath(movie.getString(getString(R.string.TMD_POSTER))),
+                        movie.getString(getString(R.string.TMD_PLOT)),
+                        movie.getString(getString(R.string.TMD_RELEASE_DATE)),
+                        movie.getDouble(getString(R.string.TMD_RATING)),
+                        movie.getDouble(getString(R.string.TMD_POPULARITY))
                 ));
             }
             return movies;
@@ -152,9 +152,9 @@ public class MainActivityFragment extends Fragment {
             String movieJsonStr = null;
 
             try {
-                Uri builtUri = Uri.parse(TMD_BASE_URL).buildUpon()
-                        .appendQueryParameter(SORT_PARAM, params[0])
-                        .appendQueryParameter(APPID_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
+                Uri builtUri = Uri.parse(getString(R.string.TMD_BASE_URL)).buildUpon()
+                        .appendQueryParameter(getString(R.string.TMD_SORT), params[0])
+                        .appendQueryParameter(getString(R.string.TMD_API_KEY), BuildConfig.THE_MOVIE_DB_API_KEY)
                         .build();
 
                 URL url = new URL(builtUri.toString());
@@ -217,7 +217,6 @@ public class MainActivityFragment extends Fragment {
             super.onPostExecute(movies);
             if( movies != null ) {
                 mMovies.clear();
-                mMovies.addAll(movies);
                 mMovies.addAll(movies);
                 movieDataArrived();
             }

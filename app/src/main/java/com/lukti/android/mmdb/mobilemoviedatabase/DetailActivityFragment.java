@@ -13,7 +13,7 @@ import com.lukti.android.mmdb.mobilemoviedatabase.data.Movie;
 import com.squareup.picasso.Picasso;
 
 /**
- * A placeholder fragment containing a simple view.
+ * Movie detail fragment
  */
 public class DetailActivityFragment extends Fragment {
 
@@ -27,9 +27,9 @@ public class DetailActivityFragment extends Fragment {
 
         // The detail Activity called via intent.  Inspect the intent for forecast data.
         Intent intent = getActivity().getIntent();
-        if (intent != null && intent.hasExtra("MOVIE")) {
-            Movie movie = intent.getParcelableExtra("MOVIE");
-            //((TextView) rootView.findViewById(R.id.detail_text)).setText(movie.getOriginalTitle());
+        if (intent != null && intent.hasExtra(getString(R.string.movie_object_key))) {
+            Movie movie = intent.getParcelableExtra(getString(R.string.movie_object_key));
+
             ImageView poster = (ImageView)rootView.findViewById(R.id.detail_poster);
             Picasso.with(getActivity()).load(movie.getPosterPath()).into(poster);
 
