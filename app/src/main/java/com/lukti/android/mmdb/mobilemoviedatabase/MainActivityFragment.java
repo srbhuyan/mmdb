@@ -9,9 +9,6 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -53,12 +50,6 @@ public class MainActivityFragment extends Fragment {
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.menu_movie_fragment, menu);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -82,15 +73,6 @@ public class MainActivityFragment extends Fragment {
 
     public void movieDataArrived(){
         mMovieAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if(id == R.id.action_refresh){
-            fetchMovieData();
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     private void fetchMovieData(){
@@ -160,15 +142,12 @@ public class MainActivityFragment extends Fragment {
                 URL url = new URL(builtUri.toString());
                 //Log.v(LOG_TAG, "Built URI " + builtUri.toString());
 
-                // Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
 
-                // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
                 if (inputStream == null) {
-                    // Nothing to do.
                     return null;
                 }
                 reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -180,13 +159,9 @@ public class MainActivityFragment extends Fragment {
                 }
 
                 if (buffer.length() == 0) {
-                    // Stream was empty.  No point in parsing.
                     return null;
                 }
                 movieJsonStr = buffer.toString();
-
-                //Log.v(LOG_TAG, "Movie JSON String: " + movieJsonStr);
-
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
                 return null;
