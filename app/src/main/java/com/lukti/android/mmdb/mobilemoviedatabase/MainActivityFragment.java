@@ -2,6 +2,7 @@ package com.lukti.android.mmdb.mobilemoviedatabase;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -9,9 +10,6 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -40,31 +38,26 @@ public class MainActivityFragment extends Fragment {
     private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
 
     private MovieAdapter mMovieAdapter;
-    private ArrayList<Movie> mMovies;
+    private final int mPortraitNumCols  = 2;
+    private final int mLandscapeNumCols = 4;
 
     public MainActivityFragment() {
-        mMovies = new ArrayList<Movie>();
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.menu_movie_fragment, menu);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        GridView gridView = (GridView)rootView;
-        mMovieAdapter = new MovieAdapter(getActivity(), mMovies);
+        GridView gridView = (GridView)inflater.inflate(R.layout.fragment_main, container, false);
+
+        int orientation = getResources().getConfiguration().orientation;
+        if( orientation == Configuration.ORIENTATION_PORTRAIT ){
+            gridView.setNumColumns(mPortraitNumCols);
+        }else if( orientation == Configuration.ORIENTATION_LANDSCAPE ){
+            gridView.setNumColumns(mLandscapeNumCols);
+        }
+
+        mMovieAdapter = new MovieAdapter(getActivity(), gridView, new ArrayList<Movie>());
 
         gridView.setAdapter(mMovieAdapter);
 
@@ -77,20 +70,7 @@ public class MainActivityFragment extends Fragment {
             }
         });
 
-        return rootView;
-    }
-
-    public void movieDataArrived(){
-        mMovieAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if(id == R.id.action_refresh){
-            fetchMovieData();
-        }
-        return super.onOptionsItemSelected(item);
+        return gridView;
     }
 
     private void fetchMovieData(){
@@ -160,15 +140,12 @@ public class MainActivityFragment extends Fragment {
                 URL url = new URL(builtUri.toString());
                 //Log.v(LOG_TAG, "Built URI " + builtUri.toString());
 
-                // Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
 
-                // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
                 if (inputStream == null) {
-                    // Nothing to do.
                     return null;
                 }
                 reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -180,13 +157,9 @@ public class MainActivityFragment extends Fragment {
                 }
 
                 if (buffer.length() == 0) {
-                    // Stream was empty.  No point in parsing.
                     return null;
                 }
                 movieJsonStr = buffer.toString();
-
-                //Log.v(LOG_TAG, "Movie JSON String: " + movieJsonStr);
-
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
                 return null;
@@ -216,9 +189,8 @@ public class MainActivityFragment extends Fragment {
         protected void onPostExecute(ArrayList<Movie> movies) {
             super.onPostExecute(movies);
             if( movies != null ) {
-                mMovies.clear();
-                mMovies.addAll(movies);
-                movieDataArrived();
+                mMovieAdapter.clear();
+                mMovieAdapter.addAll(movies);
             }
         }
     }
