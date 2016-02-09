@@ -1,5 +1,6 @@
 package com.lukti.android.mmdb.mobilemoviedatabase;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.GridView;
 
 import com.lukti.android.mmdb.mobilemoviedatabase.data.Movie;
@@ -63,6 +65,17 @@ public class MainActivityFragment extends Fragment {
         mMovieAdapter = new MovieAdapter(getActivity(), mMovies);
 
         gridView.setAdapter(mMovieAdapter);
+
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                Movie movie = mMovieAdapter.getItem(position);
+                //Toast.makeText(getActivity(), movie.getOriginalTitle(), Toast.LENGTH_SHORT).show();
+
+                Intent intent = new Intent(getActivity(), DetailActivity.class).putExtra("MOVIE", movie);
+                startActivity(intent);
+            }
+        });
 
         return rootView;
     }
