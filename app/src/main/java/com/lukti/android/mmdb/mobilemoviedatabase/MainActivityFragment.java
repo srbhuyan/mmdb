@@ -13,8 +13,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
 
-import com.lukti.android.mmdb.mobilemoviedatabase.adapter.ImageAdapter;
 import com.lukti.android.mmdb.mobilemoviedatabase.data.Movie;
+import com.lukti.android.mmdb.mobilemoviedatabase.data.MovieAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,7 +27,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -36,9 +35,8 @@ public class MainActivityFragment extends Fragment {
 
     private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
 
-    private ImageAdapter mImageAdapter;
+    private MovieAdapter mMovieAdapter;
     private ArrayList<Movie> mMovies;
-    private ArrayList<String> mPosterUrls;
 
     public MainActivityFragment() {
         mMovies = new ArrayList<Movie>();
@@ -60,59 +58,17 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        String[] posterUrls = {
-                "http://i.imgur.com/DvpvklR.png",
-                "http://i.imgur.com/DvpvklR.png",
-                "http://i.imgur.com/DvpvklR.png",
-                "http://i.imgur.com/DvpvklR.png",
-                "http://i.imgur.com/DvpvklR.png",
-                "http://i.imgur.com/DvpvklR.png",
-                "http://i.imgur.com/DvpvklR.png",
-                "http://i.imgur.com/DvpvklR.png",
-                "http://i.imgur.com/DvpvklR.png",
-                "http://i.imgur.com/DvpvklR.png",
-                "http://i.imgur.com/DvpvklR.png",
-                "http://i.imgur.com/DvpvklR.png"
-        };
-        mPosterUrls = new ArrayList<String>(Arrays.asList(posterUrls));
-
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         GridView gridView = (GridView)rootView;
-        mImageAdapter = new ImageAdapter(getActivity(), mPosterUrls);
+        mMovieAdapter = new MovieAdapter(getActivity(), mMovies);
 
-        gridView.setAdapter(mImageAdapter);
+        gridView.setAdapter(mMovieAdapter);
 
         return rootView;
     }
 
     public void movieDataArrived(){
-        mPosterUrls.clear();
-        ArrayList<String> posterUrls = buildPosterUrls();
-        mPosterUrls.addAll(posterUrls);
-        mPosterUrls.addAll(posterUrls);
-        mImageAdapter.notifyDataSetChanged();
-    }
-
-    private ArrayList<String> buildPosterUrls(){
-
-        final String POSTER_BASE_URL = "http://image.tmdb.org/t/p/";
-        final String POSTER_SIZE = "w185";
-
-        ArrayList<String> posters = new ArrayList<String>();
-
-        for( Movie movie:mMovies ){
-            Uri builtUri = Uri.parse(POSTER_BASE_URL).buildUpon()
-                    .appendPath(POSTER_SIZE)
-                    .appendEncodedPath(movie.getPosterPath())
-                    .build();
-            posters.add(builtUri.toString());
-        }
-
-        for( String poster:posters ) {
-            Log.v(LOG_TAG, "POSTER_URL: " + poster);
-        }
-
-        return posters;
+        mMovieAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -136,6 +92,17 @@ public class MainActivityFragment extends Fragment {
         final String SORT_PARAM = "sort_by";
         final String APPID_PARAM = "api_key";
 
+        final String POSTER_BASE_URL = "http://image.tmdb.org/t/p/";
+        final String POSTER_SIZE = "w185";
+
+        private String buildFullPosterPath(String partialPath){
+            Uri builtUri = Uri.parse(POSTER_BASE_URL).buildUpon()
+                    .appendPath(POSTER_SIZE)
+                    .appendEncodedPath(partialPath)
+                    .build();
+            return builtUri.toString();
+        }
+
         private ArrayList<Movie> getMoviesFromJson(String movieJsonStr) throws JSONException {
 
             final String TMD_RESULT = "results";
@@ -155,7 +122,7 @@ public class MainActivityFragment extends Fragment {
                 JSONObject movie = movieArray.getJSONObject(i);
                 movies.add(new Movie(
                         movie.getString(TMD_TITLE),
-                        movie.getString(TMD_POSTER),
+                        buildFullPosterPath(movie.getString(TMD_POSTER)),
                         movie.getString(TMD_PLOT),
                         movie.getString(TMD_RELEASE_DATE),
                         movie.getDouble(TMD_RATING),
@@ -237,6 +204,7 @@ public class MainActivityFragment extends Fragment {
             super.onPostExecute(movies);
             if( movies != null ) {
                 mMovies.clear();
+                mMovies.addAll(movies);
                 mMovies.addAll(movies);
                 movieDataArrived();
             }
