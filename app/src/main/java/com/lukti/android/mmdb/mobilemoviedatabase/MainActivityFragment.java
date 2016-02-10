@@ -8,15 +8,16 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.GridView;
 
 import com.lukti.android.mmdb.mobilemoviedatabase.data.Movie;
-import com.lukti.android.mmdb.mobilemoviedatabase.data.MovieAdapter;
+import com.lukti.android.mmdb.mobilemoviedatabase.data.MovieRecyclerAdapter;
+import com.lukti.android.mmdb.mobilemoviedatabase.data.RecyclerItemClickListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,55 +39,60 @@ public class MainActivityFragment extends Fragment {
     private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
 
     private ArrayList<Movie> mMovieBuffer;
-    private MovieAdapter mMovieAdapter;
-    private final int mPortraitNumCols  = 2;
-    private final int mLandscapeNumCols = 4;
+    private RecyclerView mRecyclerView;
+    private MovieRecyclerAdapter mMovieAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+
+    private static final int VERTICAL_SPAN_COUNT = 2;
+    private static final int HORIZONTAL_SPAN_COUNT = 4;
 
     public MainActivityFragment() {
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         if( savedInstanceState != null ){
             mMovieBuffer = savedInstanceState.getParcelableArrayList(getString(R.string.movie_object_key));
         }else{
             mMovieBuffer = new ArrayList<Movie>();
         }
-        super.onCreate(savedInstanceState);
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putParcelableArrayList(getString(R.string.movie_object_key), mMovieBuffer);
         super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(getString(R.string.movie_object_key), mMovieBuffer);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        GridView gridView = (GridView)inflater.inflate(R.layout.fragment_main, container, false);
+        mRecyclerView = (RecyclerView)inflater.inflate(R.layout.fragment_main, container, false);
+        mRecyclerView.setHasFixedSize(true);
 
-        int orientation = getResources().getConfiguration().orientation;
-        if( orientation == Configuration.ORIENTATION_PORTRAIT ){
-            gridView.setNumColumns(mPortraitNumCols);
-        }else if( orientation == Configuration.ORIENTATION_LANDSCAPE ){
-            gridView.setNumColumns(mLandscapeNumCols);
-        }
+        int spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ?
+                VERTICAL_SPAN_COUNT : HORIZONTAL_SPAN_COUNT;
 
-        mMovieAdapter = new MovieAdapter(getActivity(), gridView, mMovieBuffer);
-        gridView.setAdapter(mMovieAdapter);
+        mLayoutManager = new GridLayoutManager(getActivity(), spanCount, GridLayoutManager.VERTICAL, false);
+        mRecyclerView.setLayoutManager(mLayoutManager);
 
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                Movie movie = mMovieAdapter.getItem(position);
-                Intent intent = new Intent(getActivity(), DetailActivity.class).putExtra(getString(R.string.movie_object_key), movie);
-                startActivity(intent);
-            }
-        });
+        mMovieAdapter = new MovieRecyclerAdapter(getActivity(), mMovieBuffer);
+        mRecyclerView.setAdapter(mMovieAdapter);
 
-        return gridView;
+        mRecyclerView.addOnItemTouchListener(
+                new RecyclerItemClickListener(getActivity(), new RecyclerItemClickListener.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        Movie movie = mMovieAdapter.getItem(position);
+                        Intent intent = new Intent(getActivity(), DetailActivity.class).putExtra(getString(R.string.movie_object_key), movie);
+                        startActivity(intent);
+                    }
+                }
+                ));
+
+        return mRecyclerView;
     }
 
     private void fetchMovieData(){
