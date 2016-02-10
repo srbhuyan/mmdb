@@ -37,11 +37,28 @@ public class MainActivityFragment extends Fragment {
 
     private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
 
+    private ArrayList<Movie> mMovieBuffer;
     private MovieAdapter mMovieAdapter;
     private final int mPortraitNumCols  = 2;
     private final int mLandscapeNumCols = 4;
 
     public MainActivityFragment() {
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        if( savedInstanceState != null ){
+            mMovieBuffer = savedInstanceState.getParcelableArrayList(getString(R.string.movie_object_key));
+        }else{
+            mMovieBuffer = new ArrayList<Movie>();
+        }
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList(getString(R.string.movie_object_key), mMovieBuffer);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -57,8 +74,7 @@ public class MainActivityFragment extends Fragment {
             gridView.setNumColumns(mLandscapeNumCols);
         }
 
-        mMovieAdapter = new MovieAdapter(getActivity(), gridView, new ArrayList<Movie>());
-
+        mMovieAdapter = new MovieAdapter(getActivity(), gridView, mMovieBuffer);
         gridView.setAdapter(mMovieAdapter);
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -75,11 +91,13 @@ public class MainActivityFragment extends Fragment {
 
     private void fetchMovieData(){
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String sortPref = prefs.getString(getString(R.string.pref_movie_sort_order_key),
-                getString(R.string.sort_order_value_most_popular));
+        if( mMovieBuffer.size() == 0 ) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String sortPref = prefs.getString(getString(R.string.pref_movie_sort_order_key),
+                    getString(R.string.sort_order_value_most_popular));
 
-        new FetchMovieTask().execute(sortPref);
+            new FetchMovieTask().execute(sortPref);
+        }
     }
 
     @Override
@@ -189,8 +207,8 @@ public class MainActivityFragment extends Fragment {
         protected void onPostExecute(ArrayList<Movie> movies) {
             super.onPostExecute(movies);
             if( movies != null ) {
-                mMovieAdapter.clear();
-                mMovieAdapter.addAll(movies);
+                mMovieBuffer.addAll(movies);
+                mMovieAdapter.notifyDataSetChanged();
             }
         }
     }

@@ -29,15 +29,15 @@ public class MovieAdapter extends BaseAdapter{
         mMovies = m;
     }
 
-    public void clear(){
-        if(mMovies != null) mMovies.clear();
-        notifyDataSetChanged();
-    }
-
-    public void addAll(ArrayList<Movie> movies){
-        if( mMovies != null) mMovies.addAll(movies);
-        notifyDataSetChanged();
-    }
+//    public void clear(){
+//        if(mMovies != null) mMovies.clear();
+//        notifyDataSetChanged();
+//    }
+//
+//    public void addAll(ArrayList<Movie> movies){
+//        if( mMovies != null) mMovies.addAll(movies);
+//        notifyDataSetChanged();
+//    }
 
     public Movie getItem(int position) {
         return mMovies.get(position);
