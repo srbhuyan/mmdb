@@ -34,7 +34,7 @@ public class DetailActivityFragment extends Fragment {
 
             ((TextView)rootView.findViewById(R.id.detail_title)).setText(movie.getOriginalTitle());
             ((TextView)rootView.findViewById(R.id.detail_date)).setText(movie.getReleaseDate());
-            ((TextView)rootView.findViewById(R.id.detail_rating)).setText(Double.toString(movie.getRating()));
+            ((TextView)rootView.findViewById(R.id.detail_rating)).setText(Double.toString(movie.getRating()) + "/10");
             ((TextView)rootView.findViewById(R.id.detail_plot)).setText(movie.getPlot());
         }
 
