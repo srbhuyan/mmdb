@@ -43,11 +43,12 @@ public class MainActivityFragment extends Fragment {
     private MovieRecyclerAdapter mMovieAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
+    private SharedPreferences mSharedPref;
+    private String mSortPref;
+    private boolean mPrefChanged;
+
     private static final int VERTICAL_SPAN_COUNT = 2;
     private static final int HORIZONTAL_SPAN_COUNT = 4;
-
-    public MainActivityFragment() {
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -92,24 +93,32 @@ public class MainActivityFragment extends Fragment {
                 }
                 ));
 
+        mSharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         return mRecyclerView;
-    }
-
-    private void fetchMovieData(){
-
-        if( mMovieBuffer.size() == 0 ) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String sortPref = prefs.getString(getString(R.string.pref_movie_sort_order_key),
-                    getString(R.string.sort_order_value_most_popular));
-
-            new FetchMovieTask().execute(sortPref);
-        }
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        fetchMovieData();
+        String sortPref = mSharedPref.getString(getString(R.string.pref_movie_sort_order_key),
+                getString(R.string.sort_order_value_most_popular));
+
+        mPrefChanged = sortPref.equals(mSortPref) ? false : true;
+
+        if( mMovieBuffer.size() == 0 || mPrefChanged )
+            fetchMovieData();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mSortPref = mSharedPref.getString(getString(R.string.pref_movie_sort_order_key),
+                getString(R.string.sort_order_value_most_popular));
+    }
+
+    private void fetchMovieData(){
+        new FetchMovieTask().execute(mSharedPref.getString(getString(R.string.pref_movie_sort_order_key),
+                getString(R.string.sort_order_value_most_popular)));
     }
 
     /**
@@ -213,6 +222,9 @@ public class MainActivityFragment extends Fragment {
         protected void onPostExecute(ArrayList<Movie> movies) {
             super.onPostExecute(movies);
             if( movies != null ) {
+                if( mPrefChanged )
+                    mMovieBuffer.clear();
+
                 mMovieBuffer.addAll(movies);
                 mMovieAdapter.notifyDataSetChanged();
             }
