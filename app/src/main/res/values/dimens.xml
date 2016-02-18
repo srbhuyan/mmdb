@@ -8,4 +8,8 @@
     <dimen name="date_size">20dp</dimen>
     <dimen name="plot_size">15dp</dimen>
     <dimen name="top_margin">30dp</dimen>
+
+    <dimen name="top_margin_date">90dp</dimen>
+    <dimen name="left_margin_rating">80dp</dimen>
+    <dimen name="top_margin_plot">120dp</dimen>
 </resources>
