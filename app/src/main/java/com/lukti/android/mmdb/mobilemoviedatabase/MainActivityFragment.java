@@ -50,13 +50,17 @@ public class MainActivityFragment extends Fragment {
     private static final int VERTICAL_SPAN_COUNT = 2;
     private static final int HORIZONTAL_SPAN_COUNT = 4;
 
+    private final String SORT_PREF = "SORT_PREF";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if( savedInstanceState != null ){
             mMovieBuffer = savedInstanceState.getParcelableArrayList(getString(R.string.movie_object_key));
+            mSortPref = savedInstanceState.getString(SORT_PREF);
         }else{
             mMovieBuffer = new ArrayList<Movie>();
+            mSortPref = "";
         }
     }
 
@@ -64,6 +68,7 @@ public class MainActivityFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(getString(R.string.movie_object_key), mMovieBuffer);
+        outState.putString(SORT_PREF, mSortPref);
     }
 
     @Override
