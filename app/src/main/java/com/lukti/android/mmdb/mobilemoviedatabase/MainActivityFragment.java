@@ -113,7 +113,6 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
         return mRecyclerView;
     }
 
-    /*
     @Override
     public void onStart() {
         super.onStart();
@@ -122,10 +121,13 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
 
         mPrefChanged = sortPref.equals(mSortPref) ? false : true;
 
-        if( mMovieBuffer.size() == 0 || mPrefChanged )
-            fetchMovieData();
+        if( mPrefChanged ){
+            mPage = 0;
+            mLoading = false;
+            mMovieBuffer.clear();
+            mMovieAdapter.notifyDataSetChanged();
+        }
     }
-    */
 
     @Override
     public void onPause() {
@@ -315,9 +317,6 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
         protected void onPostExecute(ArrayList<Movie> movies) {
             super.onPostExecute(movies);
             if( movies != null ) {
-                if( mPrefChanged )
-                    mMovieBuffer.clear();
-
                 mMovieBuffer.addAll(movies);
                 mMovieAdapter.notifyDataSetChanged();
                 mLoading = false;
