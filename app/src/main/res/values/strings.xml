@@ -15,10 +15,11 @@
     <string name="TMD_RATING" translatable="false">vote_average</string>
     <string name="TMD_POPULARITY" translatable="false">popularity</string>
     <string name="TMD_API_KEY" translatable="false">api_key</string>
+    <string name="TMD_PAGE" translatable="false">page</string>
 
     <!-- The Movie DB API poster params -->
     <string name="TMD_POSTER_BASE_URL" translatable="false">http://image.tmdb.org/t/p/</string>
-    <string name="TMD_POSTER_SIZE" translatable="false">w500</string>
+    <string name="TMD_POSTER_SIZE" translatable="false">w185</string>
 
     <!-- Movie object key for intents -->
     <string name="movie_object_key" translatable="false">MOVIE</string>

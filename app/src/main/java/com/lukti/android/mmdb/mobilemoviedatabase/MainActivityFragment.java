@@ -14,10 +14,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.lukti.android.mmdb.mobilemoviedatabase.data.Movie;
 import com.lukti.android.mmdb.mobilemoviedatabase.data.MovieRecyclerAdapter;
 import com.lukti.android.mmdb.mobilemoviedatabase.data.RecyclerItemClickListener;
+import com.paginate.Paginate;
+import com.paginate.recycler.LoadingListItemCreator;
+import com.paginate.recycler.LoadingListItemSpanLookup;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,10 +36,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
+import jp.wasabeef.recyclerview.animators.SlideInUpAnimator;
+
 /**
  * MainActivity fragment.
  */
-public class MainActivityFragment extends Fragment {
+public class MainActivityFragment extends Fragment implements Paginate.Callbacks{
 
     private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
 
@@ -49,6 +56,16 @@ public class MainActivityFragment extends Fragment {
 
     private static final int VERTICAL_SPAN_COUNT = 2;
     private static final int HORIZONTAL_SPAN_COUNT = 4;
+
+    // pagination
+    private int TMD_TOTAL_PAGES = 12814;
+    private int THRESHOLD = 4;
+
+    private int mPage = 0;
+    private Paginate mPaginate;
+    private boolean mLoading = false;
+    private boolean mAddLoadingRow = true;
+    private boolean mCustomLoadingListItem = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -73,13 +90,11 @@ public class MainActivityFragment extends Fragment {
         mRecyclerView = (RecyclerView)inflater.inflate(R.layout.fragment_main, container, false);
         mRecyclerView.setHasFixedSize(true);
 
-        int spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ?
-                VERTICAL_SPAN_COUNT : HORIZONTAL_SPAN_COUNT;
-
-        mLayoutManager = new GridLayoutManager(getActivity(), spanCount, GridLayoutManager.VERTICAL, false);
+        mLayoutManager = new GridLayoutManager(getActivity(), getSpanCount(), GridLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
         mMovieAdapter = new MovieRecyclerAdapter(getActivity(), mMovieBuffer);
+        mRecyclerView.setItemAnimator(new SlideInUpAnimator());
         mRecyclerView.setAdapter(mMovieAdapter);
 
         mRecyclerView.addOnItemTouchListener(
@@ -94,9 +109,11 @@ public class MainActivityFragment extends Fragment {
                 ));
 
         mSharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        setupPagination();
         return mRecyclerView;
     }
 
+    /*
     @Override
     public void onStart() {
         super.onStart();
@@ -108,6 +125,7 @@ public class MainActivityFragment extends Fragment {
         if( mMovieBuffer.size() == 0 || mPrefChanged )
             fetchMovieData();
     }
+    */
 
     @Override
     public void onPause() {
@@ -117,8 +135,77 @@ public class MainActivityFragment extends Fragment {
     }
 
     private void fetchMovieData(){
-        new FetchMovieTask().execute(mSharedPref.getString(getString(R.string.pref_movie_sort_order_key),
+        mPage++;
+        new FetchMovieTask(mPage).execute(mSharedPref.getString(getString(R.string.pref_movie_sort_order_key),
                 getString(R.string.sort_order_value_most_popular)));
+    }
+
+    private int getSpanCount(){
+        return getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ?
+                VERTICAL_SPAN_COUNT : HORIZONTAL_SPAN_COUNT;
+    }
+
+    // pagination implementation
+    protected void setupPagination() {
+        // if RecyclerView was recently bound, unbind
+        if (mPaginate != null) {
+            mPaginate.unbind();
+        }
+
+        mLoading = false;
+        mPage = 0;
+
+        mPaginate = Paginate.with(mRecyclerView, this)
+                .setLoadingTriggerThreshold(THRESHOLD)
+                .addLoadingListItem(mAddLoadingRow)
+                .setLoadingListItemCreator(mCustomLoadingListItem ? new CustomLoadingListItemCreator() : null)
+                .setLoadingListItemSpanSizeLookup(new LoadingListItemSpanLookup() {
+                    @Override
+                    public int getSpanSize() {
+                        return getSpanCount();
+                    }
+                })
+                .build();
+    }
+
+    @Override
+    public void onLoadMore() {
+        mLoading = true;
+        fetchMovieData();
+    }
+
+    @Override
+    public boolean isLoading() {
+        return mLoading;
+    }
+
+    @Override
+    public boolean hasLoadedAllItems() {
+        return mPage == TMD_TOTAL_PAGES;
+    }
+
+    private class CustomLoadingListItemCreator implements LoadingListItemCreator {
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+            View view = inflater.inflate(R.layout.poster_view, parent, false);
+            return new ViewHolder((ImageView)view);
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+            ViewHolder vh = (ViewHolder) holder;
+            Picasso.with(getActivity()).load("http://i.imgur.com/T3Ht7S3.gif").into(vh.mImageView);
+        }
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public ImageView mImageView;
+
+        public ViewHolder(ImageView v) {
+            super(v);
+            mImageView = v;
+        }
     }
 
     /**
@@ -128,6 +215,11 @@ public class MainActivityFragment extends Fragment {
     public class FetchMovieTask extends AsyncTask<String, Void, ArrayList<Movie>> {
 
         private final String LOG_TAG = FetchMovieTask.class.getSimpleName();
+        private int pageToFetch;
+
+        public FetchMovieTask(int page){
+            this.pageToFetch = page;
+        }
 
         private String buildFullPosterPath(String partialPath){
             Uri builtUri = Uri.parse(getString(R.string.TMD_POSTER_BASE_URL)).buildUpon()
@@ -168,6 +260,7 @@ public class MainActivityFragment extends Fragment {
                 Uri builtUri = Uri.parse(getString(R.string.TMD_BASE_URL)).buildUpon()
                         .appendQueryParameter(getString(R.string.TMD_SORT), params[0])
                         .appendQueryParameter(getString(R.string.TMD_API_KEY), BuildConfig.THE_MOVIE_DB_API_KEY)
+                        .appendQueryParameter(getString(R.string.TMD_PAGE), Integer.toString(pageToFetch))
                         .build();
 
                 URL url = new URL(builtUri.toString());
@@ -227,6 +320,7 @@ public class MainActivityFragment extends Fragment {
 
                 mMovieBuffer.addAll(movies);
                 mMovieAdapter.notifyDataSetChanged();
+                mLoading = false;
             }
         }
     }
