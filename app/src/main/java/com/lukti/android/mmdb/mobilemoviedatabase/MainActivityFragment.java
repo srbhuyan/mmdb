@@ -57,6 +57,8 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
     private static final int VERTICAL_SPAN_COUNT = 2;
     private static final int HORIZONTAL_SPAN_COUNT = 4;
 
+    private final String SORT_PREF = "SORT_PREF";
+
     // pagination
     private int TMD_TOTAL_PAGES = 12814;
     private int THRESHOLD = 4;
@@ -72,8 +74,10 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
         super.onCreate(savedInstanceState);
         if( savedInstanceState != null ){
             mMovieBuffer = savedInstanceState.getParcelableArrayList(getString(R.string.movie_object_key));
+            mSortPref = savedInstanceState.getString(SORT_PREF);
         }else{
             mMovieBuffer = new ArrayList<Movie>();
+            mSortPref = "";
         }
     }
 
@@ -81,6 +85,7 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(getString(R.string.movie_object_key), mMovieBuffer);
+        outState.putString(SORT_PREF, mSortPref);
     }
 
     @Override
