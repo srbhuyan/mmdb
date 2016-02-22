@@ -55,9 +55,10 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
     private static final int HORIZONTAL_SPAN_COUNT = 4;
 
     private final String SORT_PREF = "SORT_PREF";
+    private final String TOTAL_PAGES = "TOTAL_PAGES";
 
     // pagination
-    private int TMD_TOTAL_PAGES = 12814;
+    private int mTmdTotalPages;
     private int THRESHOLD = 4;
 
     private int mPage = 0;
@@ -71,9 +72,11 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
         if( savedInstanceState != null ){
             mMovieBuffer = savedInstanceState.getParcelableArrayList(getString(R.string.movie_object_key));
             mSortPref = savedInstanceState.getString(SORT_PREF);
+            mTmdTotalPages = savedInstanceState.getInt(TOTAL_PAGES);
         }else{
             mMovieBuffer = new ArrayList<Movie>();
             mSortPref = "";
+            mTmdTotalPages = Integer.MAX_VALUE;
         }
     }
 
@@ -82,6 +85,7 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(getString(R.string.movie_object_key), mMovieBuffer);
         outState.putString(SORT_PREF, mSortPref);
+        outState.putInt(TOTAL_PAGES, mTmdTotalPages);
     }
 
     @Override
@@ -184,7 +188,7 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
 
     @Override
     public boolean hasLoadedAllItems() {
-        return mPage == TMD_TOTAL_PAGES;
+        return mPage == mTmdTotalPages;
     }
 
     /**
@@ -195,6 +199,7 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
 
         private final String LOG_TAG = FetchMovieTask.class.getSimpleName();
         private int pageToFetch;
+        private int totalPages;
 
         public FetchMovieTask(int page){
             this.pageToFetch = page;
@@ -211,6 +216,7 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
         private ArrayList<Movie> getMoviesFromJson(String movieJsonStr) throws JSONException {
 
             JSONObject movieJson = new JSONObject(movieJsonStr);
+            totalPages = movieJson.getInt(getString(R.string.TMD_TOTAL_PAGES));
             JSONArray movieArray = movieJson.getJSONArray(getString(R.string.TMD_RESULT));
 
             ArrayList<Movie> movies = new ArrayList<Movie>();
@@ -293,10 +299,11 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
         @Override
         protected void onPostExecute(ArrayList<Movie> movies) {
             super.onPostExecute(movies);
-            if( movies != null ) {
+            if( movies != null) {
                 mMovieBuffer.addAll(movies);
                 mMovieAdapter.notifyDataSetChanged();
                 mLoading = false;
+                mTmdTotalPages = totalPages;
             }
         }
     }

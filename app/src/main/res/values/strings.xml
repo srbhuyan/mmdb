@@ -16,6 +16,7 @@
     <string name="TMD_POPULARITY" translatable="false">popularity</string>
     <string name="TMD_API_KEY" translatable="false">api_key</string>
     <string name="TMD_PAGE" translatable="false">page</string>
+    <string name="TMD_TOTAL_PAGES" translatable="false">total_pages</string>
 
     <!-- The Movie DB API poster params -->
     <string name="TMD_POSTER_BASE_URL" translatable="false">http://image.tmdb.org/t/p/</string>
