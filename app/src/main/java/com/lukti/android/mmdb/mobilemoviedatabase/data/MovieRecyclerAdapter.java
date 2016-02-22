@@ -51,7 +51,7 @@ public class MovieRecyclerAdapter extends RecyclerView.Adapter<MovieRecyclerAdap
     public void onBindViewHolder(ViewHolder holder, int position) {
 
         Movie movie = getItem(position);
-        Picasso.with(mContext).load(movie.getPosterPath()).into(holder.mImageView);
+        Picasso.with(mContext).load(movie.getPosterPath()).placeholder(R.drawable.loading).into(holder.mImageView);
     }
 
     public Movie getItem(int position) {

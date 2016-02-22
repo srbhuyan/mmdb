@@ -14,15 +14,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 import com.lukti.android.mmdb.mobilemoviedatabase.data.Movie;
 import com.lukti.android.mmdb.mobilemoviedatabase.data.MovieRecyclerAdapter;
 import com.lukti.android.mmdb.mobilemoviedatabase.data.RecyclerItemClickListener;
 import com.paginate.Paginate;
-import com.paginate.recycler.LoadingListItemCreator;
 import com.paginate.recycler.LoadingListItemSpanLookup;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -66,8 +63,7 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
     private int mPage = 0;
     private Paginate mPaginate;
     private boolean mLoading = false;
-    private boolean mAddLoadingRow = true;
-    private boolean mCustomLoadingListItem = false;
+    private boolean mAddLoadingRow = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -165,7 +161,7 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
         mPaginate = Paginate.with(mRecyclerView, this)
                 .setLoadingTriggerThreshold(THRESHOLD)
                 .addLoadingListItem(mAddLoadingRow)
-                .setLoadingListItemCreator(mCustomLoadingListItem ? new CustomLoadingListItemCreator() : null)
+                .setLoadingListItemCreator(null)
                 .setLoadingListItemSpanSizeLookup(new LoadingListItemSpanLookup() {
                     @Override
                     public int getSpanSize() {
@@ -189,30 +185,6 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
     @Override
     public boolean hasLoadedAllItems() {
         return mPage == TMD_TOTAL_PAGES;
-    }
-
-    private class CustomLoadingListItemCreator implements LoadingListItemCreator {
-        @Override
-        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            View view = inflater.inflate(R.layout.poster_view, parent, false);
-            return new ViewHolder((ImageView)view);
-        }
-
-        @Override
-        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            ViewHolder vh = (ViewHolder) holder;
-            Picasso.with(getActivity()).load("http://i.imgur.com/T3Ht7S3.gif").into(vh.mImageView);
-        }
-    }
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView mImageView;
-
-        public ViewHolder(ImageView v) {
-            super(v);
-            mImageView = v;
-        }
     }
 
     /**
