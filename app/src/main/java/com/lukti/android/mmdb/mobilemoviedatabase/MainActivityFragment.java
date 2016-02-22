@@ -64,7 +64,7 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
     private int mPage = 0;
     private Paginate mPaginate;
     private boolean mLoading = false;
-    private boolean mAddLoadingRow = false;
+    private boolean mAddLoadingRow = true;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
