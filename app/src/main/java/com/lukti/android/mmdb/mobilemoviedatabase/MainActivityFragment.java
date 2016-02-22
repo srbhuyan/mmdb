@@ -56,12 +56,12 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
 
     private final String SORT_PREF = "SORT_PREF";
     private final String TOTAL_PAGES = "TOTAL_PAGES";
+    private final String PAGE_NUM = "PAGE_NUM";
 
     // pagination
     private int mTmdTotalPages;
     private int THRESHOLD = 4;
-
-    private int mPage = 0;
+    private int mPage;
     private Paginate mPaginate;
     private boolean mLoading = false;
     private boolean mAddLoadingRow = true;
@@ -73,10 +73,14 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
             mMovieBuffer = savedInstanceState.getParcelableArrayList(getString(R.string.movie_object_key));
             mSortPref = savedInstanceState.getString(SORT_PREF);
             mTmdTotalPages = savedInstanceState.getInt(TOTAL_PAGES);
+            mPage = savedInstanceState.getInt(PAGE_NUM);
         }else{
             mMovieBuffer = new ArrayList<Movie>();
-            mSortPref = "";
+            mSortPref = PreferenceManager.getDefaultSharedPreferences(getActivity())
+                    .getString(getString(R.string.pref_movie_sort_order_key),
+                    getString(R.string.sort_order_value_most_popular));
             mTmdTotalPages = Integer.MAX_VALUE;
+            mPage = 0;
         }
     }
 
@@ -86,6 +90,7 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
         outState.putParcelableArrayList(getString(R.string.movie_object_key), mMovieBuffer);
         outState.putString(SORT_PREF, mSortPref);
         outState.putInt(TOTAL_PAGES, mTmdTotalPages);
+        outState.putInt(PAGE_NUM, mPage);
     }
 
     @Override
@@ -158,9 +163,6 @@ public class MainActivityFragment extends Fragment implements Paginate.Callbacks
         if (mPaginate != null) {
             mPaginate.unbind();
         }
-
-        mLoading = false;
-        mPage = 0;
 
         mPaginate = Paginate.with(mRecyclerView, this)
                 .setLoadingTriggerThreshold(THRESHOLD)
